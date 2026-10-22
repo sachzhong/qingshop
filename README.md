@@ -4,6 +4,8 @@
 > 上游采用 MIT 协议，原 [LICENSE](./LICENSE) 及版权声明保留不变。
 > 后续将在此基础上改造为独立站项目 QingShop（计划：多语言、多币种、Stripe/PayPal 支付、SEO 友好前台）。
 
+
+> 前端目录：`qingshop-ui-admin/` 来自 [yudao-ui-admin-vue3](https://github.com/yudaocode/yudao-ui-admin-vue3)（master@050bac1），`qingshop-mall-uniapp/` 来自 [yudao-mall-uniapp](https://github.com/yudaocode/yudao-mall-uniapp)（master@4924ad5），均为 MIT 协议，导入于 2026-10-22。
 ---
 
 <p align="center">
