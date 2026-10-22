@@ -5,7 +5,8 @@
 > 后续将在此基础上改造为独立站项目 QingShop（计划：多语言、多币种、Stripe/PayPal 支付、SEO 友好前台）。
 
 ---
-#<p align="center">
+
+<p align="center">
  <img src="https://img.shields.io/badge/Spring%20Cloud-2021.0.9-blue.svg" alt="Coverage Status">
  <img src="https://img.shields.io/badge/Spring%20Boot-2.7.18-blue.svg" alt="Downloads">
  <img src="https://img.shields.io/badge/Vue-3.2-blue.svg" alt="Downloads">
