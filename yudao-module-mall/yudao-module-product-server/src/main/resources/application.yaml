@@ -125,3 +125,14 @@ yudao:
     ignore-tables:
 
 debug: false
+
+--- #################### QingShop AI 运营（qingshop-module-aiops）相关配置 ####################
+
+qingshop:
+  aiops:
+    job-enabled: true # 定时任务总开关；多实例部署时只在一个实例开启
+    price-cron: "0 0 3 * * ?" # 智能定价，每天 03:00（租户需在「AI运营 → 运营配置」中启用）
+    content-cron: "0 0 4 * * ?" # 内容优化，每天 04:00（默认未启用）
+    llm-base-url: https://api.xiaomimimo.com/v1 # OpenAI 兼容接口
+    llm-model: mimo-v2.6-flash
+    llm-key-env: LLM_SERVICE_KEY # 从该环境变量读取 API Key，Key 不写入配置文件和数据库
