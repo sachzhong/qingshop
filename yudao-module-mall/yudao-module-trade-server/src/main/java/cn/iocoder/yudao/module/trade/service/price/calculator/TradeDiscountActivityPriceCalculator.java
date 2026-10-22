@@ -103,6 +103,10 @@ public class TradeDiscountActivityPriceCalculator implements TradePriceCalculato
      * @return 用户等级
      */
     public MemberLevelRespDTO getMemberLevel(Long userId) {
+        // 未登录（例如商品列表、详情页的游客访问）时，没有会员等级，直接返回 null，避免 RPC 缺少 id 参数导致 400
+        if (userId == null) {
+            return null;
+        }
         MemberUserRespDTO user = memberUserApi.getUser(userId).getCheckedData();
         if (user == null || user.getLevelId() == null || user.getLevelId() <= 0) {
             return null;
