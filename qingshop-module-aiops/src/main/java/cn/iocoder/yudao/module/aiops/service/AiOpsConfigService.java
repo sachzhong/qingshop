@@ -35,6 +35,16 @@ public class AiOpsConfigService {
         config.setMaxChangeRatio(new BigDecimal("0.10"));
         config.setCooldownHours(72);
         config.setStatDays(30);
+        config.setRuleRefundRateHold(new BigDecimal("0.30"));
+        config.setRuleZeroSalesDays(7);
+        config.setRuleZeroSalesCutRatio(new BigDecimal("0.08"));
+        config.setRuleHotSalesMin(3);
+        config.setRuleHotStockDays(7);
+        config.setRuleHotRaiseRatio(new BigDecimal("0.06"));
+        config.setRuleConvMin(new BigDecimal("0.10"));
+        config.setRuleConvStockDays(30);
+        config.setRuleConvRaiseRatio(new BigDecimal("0.03"));
+        config.setRuleNewProductDays(7);
         config.setContentEnabled(false);
         config.setContentMode(AiOpsModeEnum.SUGGEST.name());
         config.setContentMaxSpu(5);
@@ -75,6 +85,37 @@ public class AiOpsConfigService {
         }
         if (c.getContentMaxSpu() != null && (c.getContentMaxSpu() < 1 || c.getContentMaxSpu() > 50)) {
             throw invalidParamException("每次内容优化的商品数需在 1-50");
+        }
+        // 规则阈值：比率 0~1；调价幅度 0~0.10（且不超过当前 maxChangeRatio，若已给出）
+        checkRange("退款率阈值", c.getRuleRefundRateHold(), "0", "1");
+        checkRange("零销量降价幅度", c.getRuleZeroSalesCutRatio(), "0", "0.10");
+        checkRange("畅销提价幅度", c.getRuleHotRaiseRatio(), "0", "0.10");
+        checkRange("高转化提价幅度", c.getRuleConvRaiseRatio(), "0", "0.10");
+        checkRange("转化率阈值", c.getRuleConvMin(), "0", "1");
+        checkPositiveDays("零销量上架天数阈值", c.getRuleZeroSalesDays());
+        checkPositiveDays("畅销库存天数阈值", c.getRuleHotStockDays());
+        checkPositiveDays("高转化库存天数阈值", c.getRuleConvStockDays());
+        checkPositiveDays("新品观察期天数", c.getRuleNewProductDays());
+        if (c.getRuleHotSalesMin() != null && c.getRuleHotSalesMin() < 0) {
+            throw invalidParamException("畅销销量下限不能为负数");
+        }
+        BigDecimal maxChange = c.getMaxChangeRatio();
+        if (maxChange != null) {
+            ensureNotExceed("零销量降价幅度", c.getRuleZeroSalesCutRatio(), maxChange);
+            ensureNotExceed("畅销提价幅度", c.getRuleHotRaiseRatio(), maxChange);
+            ensureNotExceed("高转化提价幅度", c.getRuleConvRaiseRatio(), maxChange);
+        }
+    }
+
+    private static void checkPositiveDays(String name, Integer v) {
+        if (v != null && (v < 1 || v > 365)) {
+            throw invalidParamException(name + " 需在 1-365");
+        }
+    }
+
+    private static void ensureNotExceed(String name, BigDecimal ratio, BigDecimal maxChange) {
+        if (ratio != null && ratio.compareTo(maxChange) > 0) {
+            throw invalidParamException(name + " 不能超过单次最大调整幅度 " + maxChange);
         }
     }
 

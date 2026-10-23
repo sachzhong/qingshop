@@ -12,6 +12,16 @@ export interface AiOpsConfigVO {
   maxChangeRatio: number
   cooldownHours: number
   statDays: number
+  ruleRefundRateHold: number
+  ruleZeroSalesDays: number
+  ruleZeroSalesCutRatio: number
+  ruleHotSalesMin: number
+  ruleHotStockDays: number
+  ruleHotRaiseRatio: number
+  ruleConvMin: number
+  ruleConvStockDays: number
+  ruleConvRaiseRatio: number
+  ruleNewProductDays: number
   contentEnabled: boolean
   contentMode: 'SUGGEST' | 'AUTO'
   contentMaxSpu: number

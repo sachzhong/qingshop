@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -65,31 +66,86 @@ public class AiOpsPriceService {
         }
     }
 
+    /**
+     * 规则引擎阈值。默认值与 Round 1 硬编码一致；null 字段按默认。
+     */
+    static class RuleParams {
+        double refundRateHold = 0.30;
+        int zeroSalesDays = 7;
+        double zeroSalesCutRatio = 0.08;
+        int hotSalesMin = 3;
+        int hotStockDays = 7;
+        double hotRaiseRatio = 0.06;
+        double convMin = 0.10;
+        int convStockDays = 30;
+        double convRaiseRatio = 0.03;
+        int newProductDays = 7;
+
+        static RuleParams defaults() {
+            return new RuleParams();
+        }
+
+        static RuleParams from(AiOpsConfigDO c) {
+            RuleParams p = defaults();
+            if (c == null) {
+                return p;
+            }
+            p.refundRateHold = bd(c.getRuleRefundRateHold(), p.refundRateHold);
+            p.zeroSalesDays = iv(c.getRuleZeroSalesDays(), p.zeroSalesDays);
+            p.zeroSalesCutRatio = bd(c.getRuleZeroSalesCutRatio(), p.zeroSalesCutRatio);
+            p.hotSalesMin = iv(c.getRuleHotSalesMin(), p.hotSalesMin);
+            p.hotStockDays = iv(c.getRuleHotStockDays(), p.hotStockDays);
+            p.hotRaiseRatio = bd(c.getRuleHotRaiseRatio(), p.hotRaiseRatio);
+            p.convMin = bd(c.getRuleConvMin(), p.convMin);
+            p.convStockDays = iv(c.getRuleConvStockDays(), p.convStockDays);
+            p.convRaiseRatio = bd(c.getRuleConvRaiseRatio(), p.convRaiseRatio);
+            p.newProductDays = iv(c.getRuleNewProductDays(), p.newProductDays);
+            return p;
+        }
+
+        private static double bd(BigDecimal v, double def) {
+            return v == null ? def : v.doubleValue();
+        }
+
+        private static int iv(Integer v, int def) {
+            return v == null ? def : v;
+        }
+    }
+
+    /** 兼容单测：使用默认阈值 */
     static RuleDecision rule(AiOpsSkuStatBO s, int statDays) {
+        return rule(s, statDays, RuleParams.defaults());
+    }
+
+    static RuleDecision rule(AiOpsSkuStatBO s, int statDays, RuleParams p) {
+        if (p == null) {
+            p = RuleParams.defaults();
+        }
         long daysOnShelf = s.getSpuCreateTime() == null ? 0 : Duration.between(s.getSpuCreateTime(), LocalDateTime.now()).toDays();
         int sales = nz(s.getSalesQty());
         int stock = nz(s.getStock());
-        double velocity = sales / (double) statDays;
+        double velocity = sales / (double) Math.max(statDays, 1);
         double stockDays = velocity > 0 ? stock / velocity : Double.MAX_VALUE;
         Integer browse = s.getBrowseCount();
         double conversion = browse != null && browse > 0 ? nz(s.getOrderCount()) / (double) browse : -1;
         if (stock <= 0) {
             return new RuleDecision(0, "无库存，不调价");
         }
-        if (sales > 0 && nz(s.getRefundQty()) / (double) sales > 0.3) {
-            return new RuleDecision(0, "退款率超过 30%，先排查商品问题，不调价");
+        if (sales > 0 && nz(s.getRefundQty()) / (double) sales > p.refundRateHold) {
+            return new RuleDecision(0, String.format("退款率超过 %.0f%%，先排查商品问题，不调价", p.refundRateHold * 100));
         }
-        if (sales == 0 && daysOnShelf >= 7) {
-            return new RuleDecision(-0.08, "上架 " + daysOnShelf + " 天、近 " + statDays + " 天零销量，建议降价促销");
+        if (sales == 0 && daysOnShelf >= p.zeroSalesDays) {
+            return new RuleDecision(-p.zeroSalesCutRatio,
+                    "上架 " + daysOnShelf + " 天、近 " + statDays + " 天零销量，建议降价促销");
         }
-        if (sales >= 3 && stockDays < 7) {
-            return new RuleDecision(0.06, String.format("畅销且库存仅够约 %.1f 天，建议小幅提价", stockDays));
+        if (sales >= p.hotSalesMin && stockDays < p.hotStockDays) {
+            return new RuleDecision(p.hotRaiseRatio, String.format("畅销且库存仅够约 %.1f 天，建议小幅提价", stockDays));
         }
-        if (conversion >= 0.10 && stockDays > 30) {
-            return new RuleDecision(0.03, String.format("转化率 %.1f%% 较高且库存充足，可小幅提价", conversion * 100));
+        if (conversion >= p.convMin && stockDays > p.convStockDays) {
+            return new RuleDecision(p.convRaiseRatio, String.format("转化率 %.1f%% 较高且库存充足，可小幅提价", conversion * 100));
         }
-        if (daysOnShelf < 7) {
-            return new RuleDecision(0, "新品观察期（上架不足 7 天），维持原价");
+        if (daysOnShelf < p.newProductDays) {
+            return new RuleDecision(0, "新品观察期（上架不足 " + p.newProductDays + " 天），维持原价");
         }
         return new RuleDecision(0, "无明显信号，维持原价");
     }
@@ -132,7 +188,7 @@ public class AiOpsPriceService {
             Map<Long, RuleDecision> rules = new HashMap<>();
             Map<Long, AiOpsGuardrail.Result> bounds = new HashMap<>();
             for (AiOpsSkuStatBO s : todo) {
-                rules.put(s.getSkuId(), rule(s, statDays));
+                rules.put(s.getSkuId(), rule(s, statDays, RuleParams.from(config)));
                 // 用一个“不可能”的候选价求出区间上下限
                 AiOpsGuardrail.Result lo = guard(config, s, 0);
                 AiOpsGuardrail.Result hi = guard(config, s, Integer.MAX_VALUE / 2);

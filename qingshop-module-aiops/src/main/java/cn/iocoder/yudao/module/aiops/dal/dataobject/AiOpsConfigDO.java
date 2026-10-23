@@ -37,6 +37,28 @@ public class AiOpsConfigDO extends TenantBaseDO {
     /** 统计窗口（天） */
     private Integer statDays;
 
+    // ---- 规则引擎阈值（默认与原硬编码一致；null 时按默认） ----
+    /** 退款率超过该值则不调价，默认 0.30 */
+    private BigDecimal ruleRefundRateHold;
+    /** 零销量且上架天数 ≥ 该值 → 降价，默认 7 */
+    private Integer ruleZeroSalesDays;
+    /** 零销量降价幅度（正数，实际取负），默认 0.08 */
+    private BigDecimal ruleZeroSalesCutRatio;
+    /** 畅销销量下限，默认 3 */
+    private Integer ruleHotSalesMin;
+    /** 畅销且库存天数低于该值 → 提价，默认 7 */
+    private Integer ruleHotStockDays;
+    /** 畅销提价幅度，默认 0.06 */
+    private BigDecimal ruleHotRaiseRatio;
+    /** 转化率下限（订单/浏览），默认 0.10 */
+    private BigDecimal ruleConvMin;
+    /** 高转化且库存天数高于该值 → 提价，默认 30 */
+    private Integer ruleConvStockDays;
+    /** 高转化提价幅度，默认 0.03 */
+    private BigDecimal ruleConvRaiseRatio;
+    /** 新品观察期天数，默认 7 */
+    private Integer ruleNewProductDays;
+
     /** 内容优化是否启用 */
     private Boolean contentEnabled;
     /** 内容优化模式：SUGGEST / AUTO */

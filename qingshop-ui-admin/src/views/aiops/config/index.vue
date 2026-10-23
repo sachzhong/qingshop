@@ -38,6 +38,44 @@
         <el-input-number v-model="form.statDays" :min="1" :max="365" />
       </el-form-item>
 
+      <el-divider content-position="left">定价规则阈值</el-divider>
+      <el-alert
+        type="warning"
+        :closable="false"
+        class="mb-15px"
+        title="调价幅度须在 0～10% 且不超过上方「单次最大调整幅度」。百分比类阈值填 0～1（如 0.30 = 30%）。"
+      />
+      <el-form-item label="退款率上限（不调价）">
+        <el-input-number v-model="form.ruleRefundRateHold" :min="0" :max="1" :step="0.05" :precision="2" />
+        <span class="ml-10px text-gray-400">默认 0.30</span>
+      </el-form-item>
+      <el-form-item label="零销量：上架天数 ≥">
+        <el-input-number v-model="form.ruleZeroSalesDays" :min="1" :max="365" />
+        <span class="ml-10px mr-10px">降价幅度</span>
+        <el-input-number v-model="form.ruleZeroSalesCutRatio" :min="0" :max="0.1" :step="0.01" :precision="2" />
+        <span class="ml-10px text-gray-400">默认 7 天 / 0.08</span>
+      </el-form-item>
+      <el-form-item label="畅销：销量 ≥">
+        <el-input-number v-model="form.ruleHotSalesMin" :min="0" :max="9999" />
+        <span class="ml-10px mr-10px">且库存天数 &lt;</span>
+        <el-input-number v-model="form.ruleHotStockDays" :min="1" :max="365" />
+        <span class="ml-10px mr-10px">提价</span>
+        <el-input-number v-model="form.ruleHotRaiseRatio" :min="0" :max="0.1" :step="0.01" :precision="2" />
+        <span class="ml-10px text-gray-400">默认 3 / 7 天 / 0.06</span>
+      </el-form-item>
+      <el-form-item label="高转化：转化率 ≥">
+        <el-input-number v-model="form.ruleConvMin" :min="0" :max="1" :step="0.01" :precision="2" />
+        <span class="ml-10px mr-10px">且库存天数 &gt;</span>
+        <el-input-number v-model="form.ruleConvStockDays" :min="1" :max="365" />
+        <span class="ml-10px mr-10px">提价</span>
+        <el-input-number v-model="form.ruleConvRaiseRatio" :min="0" :max="0.1" :step="0.01" :precision="2" />
+        <span class="ml-10px text-gray-400">默认 0.10 / 30 天 / 0.03</span>
+      </el-form-item>
+      <el-form-item label="新品观察期（天）">
+        <el-input-number v-model="form.ruleNewProductDays" :min="1" :max="365" />
+        <span class="ml-10px text-gray-400">上架不足该天数维持原价，默认 7</span>
+      </el-form-item>
+
       <el-divider content-position="left">内容优化</el-divider>
       <el-form-item label="定时任务">
         <el-switch v-model="form.contentEnabled" active-text="启用" inactive-text="停用" />

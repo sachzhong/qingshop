@@ -17,6 +17,16 @@ public class AiOpsConfigSaveReqVO {
     private BigDecimal maxChangeRatio;
     private Integer cooldownHours;
     private Integer statDays;
+    private BigDecimal ruleRefundRateHold;
+    private Integer ruleZeroSalesDays;
+    private BigDecimal ruleZeroSalesCutRatio;
+    private Integer ruleHotSalesMin;
+    private Integer ruleHotStockDays;
+    private BigDecimal ruleHotRaiseRatio;
+    private BigDecimal ruleConvMin;
+    private Integer ruleConvStockDays;
+    private BigDecimal ruleConvRaiseRatio;
+    private Integer ruleNewProductDays;
     private Boolean contentEnabled;
     private String contentMode;
     private Integer contentMaxSpu;

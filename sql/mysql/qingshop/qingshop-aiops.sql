@@ -12,6 +12,16 @@ CREATE TABLE IF NOT EXISTS `aiops_config` (
   `max_change_ratio` decimal(6,3) NOT NULL DEFAULT 0.100 COMMENT '单次最大调整幅度',
   `cooldown_hours` int NOT NULL DEFAULT 72 COMMENT '同一 SKU 调价冷却（小时）',
   `stat_days` int NOT NULL DEFAULT 30 COMMENT '统计窗口（天）',
+  `rule_refund_rate_hold` decimal(6,3) NOT NULL DEFAULT 0.300 COMMENT '退款率超过该值则不调价',
+  `rule_zero_sales_days` int NOT NULL DEFAULT 7 COMMENT '零销量且上架天数≥该值 → 降价',
+  `rule_zero_sales_cut_ratio` decimal(6,3) NOT NULL DEFAULT 0.080 COMMENT '零销量降价幅度（正数，实际为负）',
+  `rule_hot_sales_min` int NOT NULL DEFAULT 3 COMMENT '畅销销量下限',
+  `rule_hot_stock_days` int NOT NULL DEFAULT 7 COMMENT '畅销且库存天数低于该值 → 提价',
+  `rule_hot_raise_ratio` decimal(6,3) NOT NULL DEFAULT 0.060 COMMENT '畅销提价幅度',
+  `rule_conv_min` decimal(6,3) NOT NULL DEFAULT 0.100 COMMENT '转化率下限（订单/浏览）',
+  `rule_conv_stock_days` int NOT NULL DEFAULT 30 COMMENT '高转化且库存天数高于该值 → 提价',
+  `rule_conv_raise_ratio` decimal(6,3) NOT NULL DEFAULT 0.030 COMMENT '高转化提价幅度',
+  `rule_new_product_days` int NOT NULL DEFAULT 7 COMMENT '新品观察期（上架不足该天数不调价）',
   `content_enabled` bit(1) NOT NULL DEFAULT b'0' COMMENT '内容优化是否启用（定时任务）',
   `content_mode` varchar(16) NOT NULL DEFAULT 'SUGGEST',
   `content_max_spu` int NOT NULL DEFAULT 5 COMMENT '每次最多处理的 SPU 数',
@@ -111,3 +121,5 @@ INSERT INTO `system_menu` (`id`,`name`,`permission`,`type`,`sort`,`parent_id`,`p
 (9122,'审批/回滚调价','aiops:price:audit',3,2,9102,'','','','',0,b'1',b'1',b'1','1','1',b'0'),
 (9131,'运行内容优化','aiops:content:run',3,1,9103,'','','','',0,b'1',b'1',b'1','1','1',b'0'),
 (9132,'审批/回滚内容','aiops:content:audit',3,2,9103,'','','','',0,b'1',b'1',b'1','1','1',b'0');
+
+-- 已有库升级请执行：qingshop-aiops-alter-r2.sql（可重复）
